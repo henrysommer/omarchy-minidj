@@ -3,16 +3,4 @@
 # Called by the bar widget.
 
 ROOT="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
-HYPR="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/hyprland.lua"
-
-# The window needs ~116 columns, so give it its own floating size once.
-if [[ -f $HYPR ]] && ! grep -q 'org.omarchy.minidj' "$HYPR"; then
-  cat >>"$HYPR" <<'LUA'
-
--- Added by the MiniDJ plugin: open MiniDJ as a centered floating window.
-o.window("org.omarchy.minidj", { float = true, center = true, size = { 1240, 820 } })
-LUA
-  hyprctl reload >/dev/null 2>&1 || true
-fi
-
-exec omarchy-launch-or-focus-tui --app-id=org.omarchy.minidj "$ROOT/bin/minidj"
+exec omarchy-launch-or-focus-tui --app-id=org.omarchy.minidj "$ROOT/bin/minidj" --from-bar

@@ -30,15 +30,27 @@ Pick the `right` section when asked, then move the icon next to Bluetooth:
 omarchy bar move henrysommer.minidj --before omarchy.bluetooth
 ```
 
-The first click sets up a private Python environment in `~/.local/share/minidj`
-(numpy, scipy, sounddevice). That takes about a minute; later starts are instant.
+The first click opens a terminal that sets up a private Python environment in
+`~/.local/share/minidj` (about a minute; later starts are instant). It runs
+entirely as your user and installs nothing system-wide.
 
-**Requirements:** a current Omarchy with the Quickshell bar, PipeWire with
-`pipewire-pulse`, `python`, `ffmpeg` and `libpulse` (for `pactl`/`parec`). All of
-these ship with a stock Omarchy install.
+MiniDJ needs a window of about 116×34 characters. On first launch it **asks**
+whether it may add this rule to `~/.config/hypr/hyprland.lua` so it opens as a
+centered floating window:
 
-The first launch also adds one window rule to `~/.config/hypr/hyprland.lua` so
-MiniDJ opens as a centered 1240×820 floating window (it needs ~116 columns).
+```lua
+o.window("org.omarchy.minidj", { float = true, center = true, size = { 1240, 820 } })
+```
+
+If you answer no, your config stays untouched and MiniDJ won't ask again; you can
+paste the line above into `hyprland.lua` yourself at any time.
+
+### Dependencies
+
+- **System** (preinstalled on Omarchy): PipeWire with `pipewire-pulse`, `python`,
+  `ffmpeg` (decodes tracks) and `libpulse` (`pactl`/`parec` for live mode)
+- **Python** (installed by `pip` from PyPI into `~/.local/share/minidj/venv`):
+  `numpy`, `scipy`, `sounddevice`, see [`app/requirements.txt`](app/requirements.txt)
 
 You can also start it from a terminal: `~/.config/omarchy/plugins/henrysommer.minidj/bin/minidj [trackA] [trackB]`.
 
@@ -65,7 +77,8 @@ omarchy plugin remove henrysommer.minidj
 rm -rf ~/.local/share/minidj
 ```
 
-Then delete the `MiniDJ` window rule at the end of `~/.config/hypr/hyprland.lua`.
+If you let MiniDJ add its window rule, delete the two `MiniDJ` lines at the end
+of `~/.config/hypr/hyprland.lua`.
 
 ## Development
 

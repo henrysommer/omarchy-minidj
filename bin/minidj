@@ -5,8 +5,17 @@ set -eo pipefail
 
 ROOT="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
 APP="$ROOT/app"
-VENV="${XDG_DATA_HOME:-$HOME/.local/share}/minidj/venv"
+STATE="${XDG_DATA_HOME:-$HOME/.local/share}/minidj"
+VENV="$STATE/venv"
 STAMP="$VENV/.requirements.sha256"
+HYPR="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/hyprland.lua"
+RULE='o.window("org.omarchy.minidj", { float = true, center = true, size = { 1240, 820 } })'
+
+FROM_BAR=""
+if [[ ${1:-} == --from-bar ]]; then
+  FROM_BAR=1
+  shift
+fi
 
 pause_on_error() {
   echo
@@ -33,6 +42,37 @@ if [[ ! -x $VENV/bin/python || "$(cat "$STAMP" 2>/dev/null)" != "$want" ]]; then
   echo "$want" >"$STAMP"
   trap - ERR
 fi
+
+# MiniDJ needs ~116x34 characters, so offer (once) to add a floating-window
+# rule. The user's config is only changed after they say yes.
+offer_window_rule() {
+  [[ -f $HYPR && -t 0 ]] || return 0
+  grep -q 'org.omarchy.minidj' "$HYPR" && return 0
+  [[ -f $STATE/window-rule ]] && return 0
+
+  echo "MiniDJ works best as a centered floating window of about 1240x820."
+  echo "May it add this rule to $HYPR?"
+  echo
+  echo "  $RULE"
+  echo
+  read -rp "Add the window rule? [Y/n] " answer
+  mkdir -p "$STATE"
+  if [[ ${answer,,} == n* ]]; then
+    echo declined >"$STATE/window-rule"
+    echo "Okay, your config stays untouched. The README explains how to add it later."
+    sleep 2
+    return 0
+  fi
+  printf '\n-- Added by the MiniDJ plugin (with consent): open MiniDJ as a centered floating window.\n%s\n' "$RULE" >>"$HYPR"
+  echo added >"$STATE/window-rule"
+  hyprctl reload >/dev/null 2>&1 || true
+  if [[ -n $FROM_BAR ]]; then
+    # Reopen so the new rule applies; this window closes right away.
+    setsid bash -c 'sleep 1; exec "$0"' "$ROOT/bin/minidj-launch" >/dev/null 2>&1 &
+    exit 0
+  fi
+}
+offer_window_rule
 
 # Keep the plugin checkout clean so `omarchy plugin update` can always pull.
 export PYTHONDONTWRITEBYTECODE=1
