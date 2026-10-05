@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "henrysommer.minidj",
+  "name": "MiniDJ",
+  "version": "0.1.0",
+  "author": "Henry Sommer",
+  "license": "MIT",
+  "description": "A minimal two-deck DJ controller in the terminal: spinning ASCII vinyls, 3-band EQ, speed, crossfader, sound-effect pads and live mixing of other apps' audio via PipeWire. Opens from the bar.",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "MiniDJ",
+    "description": "Opens the MiniDJ two-deck controller",
+    "category": "Media",
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}

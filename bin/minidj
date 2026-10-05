@@ -1,0 +1,39 @@
+#!/bin/bash
+# Runs MiniDJ. On first start (or when requirements change) it sets up its own
+# Python environment under ~/.local/share/minidj. Usage: minidj [trackA] [trackB]
+set -eo pipefail
+
+ROOT="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
+APP="$ROOT/app"
+VENV="${XDG_DATA_HOME:-$HOME/.local/share}/minidj/venv"
+STAMP="$VENV/.requirements.sha256"
+
+pause_on_error() {
+  echo
+  read -rp "MiniDJ could not start. Press Enter to close … " _
+}
+
+missing=()
+for cmd in python3 ffmpeg pactl parec; do
+  command -v "$cmd" >/dev/null || missing+=("$cmd")
+done
+if (( ${#missing[@]} )); then
+  echo "MiniDJ is missing: ${missing[*]}"
+  echo "Install with: omarchy pkg add python ffmpeg libpulse"
+  pause_on_error
+  exit 1
+fi
+
+want="$(sha256sum "$APP/requirements.txt" | cut -d' ' -f1)"
+if [[ ! -x $VENV/bin/python || "$(cat "$STAMP" 2>/dev/null)" != "$want" ]]; then
+  trap pause_on_error ERR
+  echo "Setting up MiniDJ (first run only, takes about a minute) …"
+  python3 -m venv "$VENV"
+  "$VENV/bin/pip" install --quiet --upgrade -r "$APP/requirements.txt"
+  echo "$want" >"$STAMP"
+  trap - ERR
+fi
+
+# Keep the plugin checkout clean so `omarchy plugin update` can always pull.
+export PYTHONDONTWRITEBYTECODE=1
+exec "$VENV/bin/python" "$APP/minidj.py" "$@"
